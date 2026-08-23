@@ -1,0 +1,83 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="400dp"
+    android:height="400dp"
+    android:viewportWidth="400"
+    android:viewportHeight="400">
+
+    <!-- soft background circles -->
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.15"
+        android:pathData="M30,200 A170,170 0 1,0 370,200 A170,170 0 1,0 30,200 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.12"
+        android:pathData="M70,200 A130,130 0 1,0 330,200 A130,130 0 1,0 70,200 Z"/>
+
+    <!-- clipboard back plate -->
+    <path
+        android:fillColor="#FF6A3D"
+        android:pathData="M133,70 H267 A18,18 0 0 1 285,88 V282 A18,18 0 0 1 267,300 H133 A18,18 0 0 1 115,282 V88 A18,18 0 0 1 133,70 Z"/>
+
+    <!-- clipboard paper -->
+    <path
+        android:fillColor="#FFF3EE"
+        android:pathData="M140,90 H260 A10,10 0 0 1 270,100 V275 A10,10 0 0 1 260,285 H140 A10,10 0 0 1 130,275 V100 A10,10 0 0 1 140,90 Z"/>
+
+    <!-- clipboard clip -->
+    <path
+        android:fillColor="#FF4500"
+        android:pathData="M180,58 H220 A8,8 0 0 1 228,66 V80 A8,8 0 0 1 220,88 H180 A8,8 0 0 1 172,80 V66 A8,8 0 0 1 180,58 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:pathData="M187,66 H213 A5,5 0 0 1 218,71 V75 A5,5 0 0 1 213,80 H187 A5,5 0 0 1 182,75 V71 A5,5 0 0 1 187,66 Z"/>
+
+    <!-- empty lines on the paper -->
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.5"
+        android:pathData="M154,130 H246 A4,4 0 0 1 250,134 A4,4 0 0 1 246,138 H154 A4,4 0 0 1 150,134 A4,4 0 0 1 154,130 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.4"
+        android:pathData="M154,155 H226 A4,4 0 0 1 230,159 A4,4 0 0 1 226,163 H154 A4,4 0 0 1 150,159 A4,4 0 0 1 154,155 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.3"
+        android:pathData="M154,180 H236 A4,4 0 0 1 240,184 A4,4 0 0 1 236,188 H154 A4,4 0 0 1 150,184 A4,4 0 0 1 154,180 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.25"
+        android:pathData="M154,205 H206 A4,4 0 0 1 210,209 A4,4 0 0 1 206,213 H154 A4,4 0 0 1 150,209 A4,4 0 0 1 154,205 Z"/>
+
+    <!-- pencil, rotated -->
+    <group
+        android:pivotX="300"
+        android:pivotY="250"
+        android:rotation="35">
+        <path
+            android:fillColor="#FF4500"
+            android:pathData="M294,180 H304 A4,4 0 0 1 308,184 V286 A4,4 0 0 1 304,290 H294 A4,4 0 0 1 290,286 V184 A4,4 0 0 1 294,180 Z"/>
+        <path
+            android:fillColor="#FFA07A"
+            android:pathData="M290,180 L308,180 L299,155 Z"/>
+        <path
+            android:fillColor="#FF8C69"
+            android:pathData="M293,270 H305 A3,3 0 0 1 308,273 V287 A3,3 0 0 1 305,290 H293 A3,3 0 0 1 290,287 V273 A3,3 0 0 1 293,270 Z"/>
+    </group>
+
+    <!-- sparkle accents -->
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.6"
+        android:pathData="M104,320 A6,6 0 1,0 116,320 A6,6 0 1,0 104,320 Z"/>
+    <path
+        android:fillColor="#FF6A3D"
+        android:fillAlpha="0.5"
+        android:pathData="M315,110 A5,5 0 1,0 325,110 A5,5 0 1,0 315,110 Z"/>
+    <path
+        android:fillColor="#FF4500"
+        android:fillAlpha="0.4"
+        android:pathData="M86,140 A4,4 0 1,0 94,140 A4,4 0 1,0 86,140 Z"/>
+
+</vector>

@@ -1,0 +1,52 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="400"
+    android:viewportHeight="400">
+
+    <!-- background circle -->
+    <path
+        android:fillColor="#FF4500"
+        android:pathData="M0,200 A200,200 0 1,0 400,200 A200,200 0 1,0 0,200 Z"/>
+
+    <!-- note card -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M144,115 H256 A14,14 0 0 1 270,129 V271 A14,14 0 0 1 256,285 H144 A14,14 0 0 1 130,271 V129 A14,14 0 0 1 144,115 Z"/>
+
+    <!-- folded corner -->
+    <path
+        android:fillColor="#FFA07A"
+        android:pathData="M240,115 L270,115 L270,145 Z"/>
+
+    <!-- text lines on the note -->
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.9"
+        android:pathData="M156,155 H244 A6,6 0 0 1 250,161 A6,6 0 0 1 244,167 H156 A6,6 0 0 1 150,161 A6,6 0 0 1 156,155 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.7"
+        android:pathData="M156,180 H244 A6,6 0 0 1 250,186 A6,6 0 0 1 244,192 H156 A6,6 0 0 1 150,186 A6,6 0 0 1 156,180 Z"/>
+    <path
+        android:fillColor="#FFA07A"
+        android:fillAlpha="0.5"
+        android:pathData="M156,205 H214 A6,6 0 0 1 220,211 A6,6 0 0 1 214,217 H156 A6,6 0 0 1 150,211 A6,6 0 0 1 156,205 Z"/>
+
+    <!-- pencil accent, top right -->
+    <group
+        android:pivotX="293"
+        android:pivotY="97"
+        android:rotation="40">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M289,60 H297 A4,4 0 0 1 301,64 V131 A4,4 0 0 1 297,135 H289 A4,4 0 0 1 285,131 V64 A4,4 0 0 1 289,60 Z"/>
+        <path
+            android:fillColor="#FFA07A"
+            android:pathData="M285,60 L301,60 L293,38 Z"/>
+        <path
+            android:fillColor="#FFA07A"
+            android:pathData="M288,135 H298 A3,3 0 0 1 301,138 V148 A3,3 0 0 1 298,151 H288 A3,3 0 0 1 285,148 V138 A3,3 0 0 1 288,135 Z"/>
+    </group>
+
+</vector>
