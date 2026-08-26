@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.notestaker.model.Note
 
-@Database (entities = [Note::class], version = 1)
+@Database (entities = [Note::class], version = 2)
 abstract class NoteData: RoomDatabase() {
 
     abstract fun getNoteDao(): NoteDao
@@ -30,6 +30,6 @@ abstract class NoteData: RoomDatabase() {
                 context.applicationContext,
                 NoteData::class.java,
                 "note_db"
-            ).build()
+            ).fallbackToDestructiveMigration().build()
     }
 }

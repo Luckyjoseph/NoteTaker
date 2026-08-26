@@ -4,6 +4,11 @@
 
 
     <item
+        android:id="@+id/lockMenu"
+        android:title="Set Lock"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/deleteMenu"
         android:icon="@drawable/outline_delete_24"
         android:title=""

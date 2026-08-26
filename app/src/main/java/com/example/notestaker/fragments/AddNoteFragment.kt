@@ -1,5 +1,7 @@
 package com.example.notestaker.fragments
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -19,6 +21,7 @@ import com.example.notestaker.databinding.FragmentAddNoteBinding
 import com.example.notestaker.model.Note
 import com.example.notestaker.viewmodel.NoteViewModel
 import com.google.android.material.snackbar.Snackbar
+import java.util.Calendar
 
 class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
     private var addNoteBinding: FragmentAddNoteBinding? = null
@@ -26,6 +29,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
 
     private lateinit var noteViewModel: NoteViewModel
     private lateinit var addNoteView: View
+
+    private var selectedUnlockTimestamp: Long = 0L
 
 
     override fun onCreateView(
@@ -52,7 +57,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
         val noteDesc = binding.addNoteDesc.text.toString().trim()
 
         if (noteTitle.isNotEmpty()){
-            val note = Note(0, noteTitle, noteDesc)
+            val note = Note(0, noteTitle, noteDesc, selectedUnlockTimestamp)
             noteViewModel.addNote(note)
 
             Toast.makeText(addNoteView.context, "Note Saved", Toast.LENGTH_SHORT).show()
@@ -66,6 +71,38 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
 
         }
 
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                showTimePicker(calendar)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun showTimePicker(calendar: Calendar) {
+        TimePickerDialog(
+            requireContext(),
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+                selectedUnlockTimestamp = calendar.timeInMillis
+                Toast.makeText(context, "Note will be locked until: ${calendar.time}", Toast.LENGTH_LONG).show()
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        ).show()
+    }
+
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.menu_add_note, menu)
@@ -75,6 +112,10 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
         return when(menuItem.itemId){
             R.id.saveMenu -> {
                 saveNote(addNoteView)
+                true
+            }
+            R.id.lockMenu -> {
+                showDatePicker()
                 true
             }
             else -> false

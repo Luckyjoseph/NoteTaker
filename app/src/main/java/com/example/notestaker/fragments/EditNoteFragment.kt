@@ -1,5 +1,7 @@
 package com.example.notestaker.fragments
 
+import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.os.Bundle
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
@@ -20,6 +22,7 @@ import com.example.notestaker.R
 import com.example.notestaker.databinding.FragmentEditNoteBinding
 import com.example.notestaker.model.Note
 import com.example.notestaker.viewmodel.NoteViewModel
+import java.util.Calendar
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -30,6 +33,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private lateinit var currentNote: Note
 
     private val args: EditNoteFragmentArgs by navArgs()
+
+    private var selectedUnlockTimestamp: Long = 0L
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -49,6 +54,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         noteViewModel = (activity as MainActivity).noteViewModel
         currentNote = args.note!!
 
+        selectedUnlockTimestamp = currentNote.unlockTimestamp
+
         binding.editNoteTitle.setText(currentNote.noteTitle)
         binding.editNoteDesc.setText(currentNote.noteDesc)
 
@@ -59,7 +66,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
             if (noteTitle.isNotEmpty()){
 
-                val note = Note (currentNote.id, noteTitle, noteDesc)
+                val note = Note (currentNote.id, noteTitle, noteDesc, selectedUnlockTimestamp)
                 noteViewModel.updateNote(note)
                 view.findNavController().popBackStack(R.id.homeFragment, false)
 
@@ -82,6 +89,41 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         }.create().show()
     }
 
+    private fun showDatePicker() {
+        val calendar = Calendar.getInstance()
+        if (selectedUnlockTimestamp > 0) {
+            calendar.timeInMillis = selectedUnlockTimestamp
+        }
+        DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                calendar.set(Calendar.YEAR, year)
+                calendar.set(Calendar.MONTH, month)
+                calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+                showTimePicker(calendar)
+            },
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        ).show()
+    }
+
+    private fun showTimePicker(calendar: Calendar) {
+        TimePickerDialog(
+            requireContext(),
+            { _, hourOfDay, minute ->
+                calendar.set(Calendar.HOUR_OF_DAY, hourOfDay)
+                calendar.set(Calendar.MINUTE, minute)
+                calendar.set(Calendar.SECOND, 0)
+                selectedUnlockTimestamp = calendar.timeInMillis
+                Toast.makeText(context, "Note will be locked until: ${calendar.time}", Toast.LENGTH_LONG).show()
+            },
+            calendar.get(Calendar.HOUR_OF_DAY),
+            calendar.get(Calendar.MINUTE),
+            true
+        ).show()
+    }
+
     override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
         menu.clear()
         menuInflater.inflate(R.menu.menu_edit_note, menu)
@@ -93,7 +135,12 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             R.id.deleteMenu -> {
                 deleteNote()
                 true
-            } else -> false
+            }
+            R.id.lockMenu -> {
+                showDatePicker()
+                true
+            }
+            else -> false
         }
 
     }
