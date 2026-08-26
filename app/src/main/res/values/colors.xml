@@ -4,4 +4,11 @@
     <color name="white">#FFFFFFFF</color>
     <color name="lightSalmon">#FFA07A</color>
     <color name="orangeRed">#FF4500</color>
+
+    <!-- Mood Colors -->
+    <color name="mood_urgent">#FFEBEB</color>
+    <color name="mood_joy">#EBFFEB</color>
+    <color name="mood_work">#EBF5FF</color>
+    <color name="mood_idea">#F5EBFF</color>
+    <color name="mood_neutral">#FFFFFF</color>
 </resources>
