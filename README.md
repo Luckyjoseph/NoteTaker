@@ -8,6 +8,10 @@ NotesTaker is a simple, modern, and efficient Android application designed for q
 - **Manage Notes**: Edit or delete existing notes to keep your list organized.
 - **Search Functionality**: Quickly find specific notes using the built-in search feature on the home screen.
 - **Adaptive Layout**: View your notes in a beautiful staggered grid layout that adapts to different screen sizes.
+- **Mood-Reactive Styling**: Automatically changes note colors based on keywords like "Urgent", "Happy", or "Work" for visual organization.
+- **"Time Capsule" Notes**: Lock your notes until a specific future date and time—perfect for long-term goals or reminders.
+- **"Ghost" Privacy Mode**: Instantly obscure all note content with a one-tap privacy toggle, making it safe to use in public spaces.
+- **Smart Action Ribbons**: Detects phone numbers, emails, and web links in your notes and adds one-tap action buttons directly to the card.
 - **Local Storage**: Your notes are stored locally on your device using Room Database, ensuring they are available even offline.
 - **Modern Architecture**: Built following the MVVM (Model-View-ViewModel) architecture for scalability and maintainability.
 
@@ -23,8 +27,8 @@ NotesTaker is a simple, modern, and efficient Android application designed for q
 
 ## Screenshots
 ![Home Screen](screenshots/Screenshot_20260823_164224.png)
+![Feature update](screenshots/img_1.png)
 
-[//]: # (![Features]&#40;screenshots/img_1.png&#41;)
 
 
 
