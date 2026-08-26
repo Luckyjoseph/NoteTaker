@@ -8,6 +8,7 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
@@ -117,7 +118,20 @@ class HomeFragment : Fragment(R.layout.fragment_home), SearchView.OnQueryTextLis
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return false
+        return when (menuItem.itemId) {
+            R.id.ghostMenu -> {
+                noteAdapter.isGhostMode = !noteAdapter.isGhostMode
+                if (noteAdapter.isGhostMode) {
+                    menuItem.setIcon(android.R.drawable.ic_menu_close_clear_cancel)
+                    Toast.makeText(context, "Ghost Mode Enabled", Toast.LENGTH_SHORT).show()
+                } else {
+                    menuItem.setIcon(android.R.drawable.ic_menu_view)
+                    Toast.makeText(context, "Ghost Mode Disabled", Toast.LENGTH_SHORT).show()
+                }
+                true
+            }
+            else -> false
+        }
     }
 
 

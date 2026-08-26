@@ -18,6 +18,12 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
 
     class NoteViewHolder(val itemBinding: NoteLayoutBinding) : RecyclerView.ViewHolder(itemBinding.root)
 
+    var isGhostMode: Boolean = false
+        set(value) {
+            field = value
+            notifyDataSetChanged()
+        }
+
 
     private val differCallback = object : DiffUtil.ItemCallback<Note>(){
         override fun areItemsTheSame(
@@ -62,20 +68,26 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(com.example.notestaker.R.color.white))
             holder.itemBinding.cardView.alpha = 0.5f
         } else {
-            holder.itemBinding.noteTitle.text = currentNote.noteTitle
-            holder.itemBinding.noteDesc.text = currentNote.noteDesc
-            holder.itemBinding.cardView.alpha = 1.0f
+            if (isGhostMode) {
+                holder.itemBinding.noteTitle.text = "••••••••"
+                holder.itemBinding.noteDesc.text = "••••••••••••••••••••"
+                holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(com.example.notestaker.R.color.white))
+            } else {
+                holder.itemBinding.noteTitle.text = currentNote.noteTitle
+                holder.itemBinding.noteDesc.text = currentNote.noteDesc
 
-            // Mood-Reactive Styling: Change color based on keywords
-            val content = "${currentNote.noteTitle} ${currentNote.noteDesc}".lowercase()
-            val colorRes = when {
-                content.contains("urgent") || content.contains("must") || content.contains("deadline") -> com.example.notestaker.R.color.mood_urgent
-                content.contains("happy") || content.contains("great") || content.contains("awesome") || content.contains("love") -> com.example.notestaker.R.color.mood_joy
-                content.contains("work") || content.contains("meeting") || content.contains("todo") || content.contains("project") -> com.example.notestaker.R.color.mood_work
-                content.contains("idea") || content.contains("creative") || content.contains("think") -> com.example.notestaker.R.color.mood_idea
-                else -> com.example.notestaker.R.color.mood_neutral
+                // Mood-Reactive Styling: Change color based on keywords
+                val content = "${currentNote.noteTitle} ${currentNote.noteDesc}".lowercase()
+                val colorRes = when {
+                    content.contains("urgent") || content.contains("must") || content.contains("deadline") -> com.example.notestaker.R.color.mood_urgent
+                    content.contains("happy") || content.contains("great") || content.contains("awesome") || content.contains("love") -> com.example.notestaker.R.color.mood_joy
+                    content.contains("work") || content.contains("meeting") || content.contains("todo") || content.contains("project") -> com.example.notestaker.R.color.mood_work
+                    content.contains("idea") || content.contains("creative") || content.contains("think") -> com.example.notestaker.R.color.mood_idea
+                    else -> com.example.notestaker.R.color.mood_neutral
+                }
+                holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(colorRes))
             }
-            holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(colorRes))
+            holder.itemBinding.cardView.alpha = 1.0f
         }
 
         holder.itemView.setOnClickListener {
