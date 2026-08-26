@@ -40,6 +40,18 @@
                 android:fontFamily="@font/poppins"
                 android:textColor="@color/lightSalmon"/>
 
+            <LinearLayout
+                android:id="@+id/actionRibbon"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal"
+                android:gravity="end"
+                android:visibility="gone"
+                tools:visibility="visible">
+                <!-- Buttons will be added dynamically -->
+            </LinearLayout>
+
         </LinearLayout>
 
     </androidx.cardview.widget.CardView>

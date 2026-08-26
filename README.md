@@ -24,6 +24,8 @@ NotesTaker is a simple, modern, and efficient Android application designed for q
 ## Screenshots
 ![Home Screen](screenshots/Screenshot_20260823_164224.png)
 
+[//]: # (![Features]&#40;screenshots/img_1.png&#41;)
+
 
 
 ## Installation
