@@ -65,7 +65,6 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         val currentNote = differ.currentList[position]
         val isLocked = System.currentTimeMillis() < currentNote.unlockTimestamp
 
-        // Clear action ribbon from previous bindings
         holder.itemBinding.actionRibbon.removeAllViews()
         holder.itemBinding.actionRibbon.visibility = View.GONE
 
@@ -85,7 +84,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                 holder.itemBinding.noteTitle.text = currentNote.noteTitle
                 holder.itemBinding.noteDesc.text = currentNote.noteDesc
 
-                // Mood-Reactive Styling: Change color based on keywords
+
                 val content = "${currentNote.noteTitle} ${currentNote.noteDesc}".lowercase()
                 val colorRes = when {
                     content.contains("urgent") || content.contains("must") || content.contains("deadline") -> com.example.notestaker.R.color.mood_urgent
@@ -96,7 +95,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                 }
                 holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(colorRes))
 
-                // Feature #4: Smart Action Ribbon
+
                 setupSmartActions(holder, currentNote.noteDesc)
             }
             holder.itemBinding.cardView.alpha = 1.0f
@@ -117,7 +116,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
         val context = holder.itemView.context
         val ribbon = holder.itemBinding.actionRibbon
 
-        // Check for Web Links
+
         val urlMatcher = Patterns.WEB_URL.matcher(description)
         if (urlMatcher.find()) {
             val url = urlMatcher.group()
@@ -127,7 +126,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             }
         }
 
-        // Check for Emails
+
         val emailMatcher = Patterns.EMAIL_ADDRESS.matcher(description)
         if (emailMatcher.find()) {
             val email = emailMatcher.group()
@@ -137,7 +136,7 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
             }
         }
 
-        // Check for Phone Numbers
+
         val phoneMatcher = Patterns.PHONE.matcher(description)
         if (phoneMatcher.find()) {
             val phone = phoneMatcher.group()

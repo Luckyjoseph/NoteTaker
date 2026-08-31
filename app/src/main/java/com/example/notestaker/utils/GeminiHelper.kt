@@ -22,9 +22,9 @@ object GeminiHelper {
                         Please provide a professional executive summary of the following text. 
                         Structure it clearly with these sections:
                         
-                        - **OVERVIEW**: A brief one-sentence summary.
-                        - **KEY HIGHLIGHTS**: The most important points as clear, professional bullets.
-                        - **INSIGHT**: A professional concluding thought.
+                        **OVERVIEW**: A brief one-sentence summary.
+                        **KEY HIGHLIGHTS**: The most important points as clear, professional bullets.
+                        **INSIGHT**: A professional concluding thought.
                         
                         Use a formal and sophisticated tone. 
                         Ensure headers are in BOLD using **HEADER NAME**.

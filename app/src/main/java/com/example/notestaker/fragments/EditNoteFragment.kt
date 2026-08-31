@@ -11,20 +11,20 @@ import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
-import android.view.inputmethod.InputMethodManager
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -55,7 +55,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
+
         editNoteBinding = FragmentEditNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -180,7 +180,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             val copyButton = view.findViewById<Button>(R.id.copyButton)
             val shareButton = view.findViewById<Button>(R.id.shareButton)
 
-            // Initial state
+
             progressBar.visibility = View.VISIBLE
             scrollView.visibility = View.GONE
             copyButton.isEnabled = false
@@ -226,19 +226,41 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         val lines = text.split("\n")
 
         for (line in lines) {
-            val trimmedLine = line.trim()
-            if (trimmedLine.startsWith("**") && trimmedLine.endsWith("**")) {
-                // Header format: **Header**
-                val header = trimmedLine.substring(2, trimmedLine.length - 2)
-                val start = builder.length
-                builder.append(header.uppercase()).append("\n")
-                builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-            } else if (trimmedLine.startsWith("-")) {
-                // Bullet format: - Point
-                builder.append("  • ").append(trimmedLine.substring(1).trim()).append("\n")
-            } else {
-                builder.append(line).append("\n")
+            var currentLine = line.trim()
+            if (currentLine.isEmpty()) {
+                builder.append("\n")
+                continue
             }
+
+            val bulletRegex = "^([-•]|\\*(?!\\*))\\s*".toRegex()
+            if (currentLine.contains(bulletRegex)) {
+                builder.append("  • ")
+                currentLine = currentLine.replaceFirst(bulletRegex, "")
+            }
+
+
+            var lastIdx = 0
+            val boldRegex = "\\*{2,3}(.*?)\\*{2,3}".toRegex()
+            
+            boldRegex.findAll(currentLine).forEach { match ->
+                builder.append(currentLine.substring(lastIdx, match.range.first))
+                
+                val boldStart = builder.length
+                val boldContent = match.groupValues[1]
+                
+
+                if (boldContent == "OVERVIEW" || boldContent == "KEY HIGHLIGHTS" || boldContent == "INSIGHT") {
+                    builder.append(boldContent.uppercase())
+                } else {
+                    builder.append(boldContent)
+                }
+                
+                builder.setSpan(StyleSpan(Typeface.BOLD), boldStart, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                lastIdx = match.range.last + 1
+            }
+            
+            builder.append(currentLine.substring(lastIdx))
+            builder.append("\n")
         }
         return builder
     }
