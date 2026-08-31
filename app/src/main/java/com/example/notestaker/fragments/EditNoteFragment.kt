@@ -1,13 +1,18 @@
 package com.example.notestaker.fragments
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
@@ -21,7 +26,9 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
@@ -41,6 +48,7 @@ import com.example.notestaker.viewmodel.NoteViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.Locale
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
@@ -55,11 +63,23 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private var selectedUnlockTimestamp: Long = 0L
     private var isAIProcessing = false
 
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var isRecording = false
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            startRecording()
+        } else {
+            Toast.makeText(context, "Permission denied to record audio", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         editNoteBinding = FragmentEditNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -85,11 +105,10 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
         binding.editNoteDesc.setText(currentNote.noteDesc)
 
         binding.editNoteFab.setOnClickListener {
-
             val noteTitle = binding.editNoteTitle.text.toString().trim()
             val noteDesc = binding.editNoteDesc.text.toString().trim()
 
-            if (noteDesc.isNotEmpty()){
+            if (noteDesc.isNotEmpty()) {
                 if (noteTitle.isEmpty()) {
                     Toast.makeText(context, "AI is generating a title and updating mood...", Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch {
@@ -109,22 +128,98 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                     Toast.makeText(context, "AI is updating mood...", Toast.LENGTH_SHORT).show()
                     lifecycleScope.launch {
                         val mood = GeminiHelper.analyzeSentiment(noteDesc)
-                        val note = Note (currentNote.id, noteTitle, noteDesc, selectedUnlockTimestamp, mood)
+                        val note = Note(currentNote.id, noteTitle, noteDesc, selectedUnlockTimestamp, mood)
                         noteViewModel.updateNote(note)
                         view.findNavController().popBackStack(R.id.homeFragment, false)
                     }
                 }
             } else {
-                Toast.makeText(context, "Please enter note description" , Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please enter note description", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        binding.recordFab.setOnClickListener {
+            if (isRecording) {
+                stopRecording()
+            } else {
+                checkPermissionAndStartRecording()
             }
         }
     }
 
-    private fun deleteNote(){
+    private fun checkPermissionAndStartRecording() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                startRecording()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+    private fun startRecording() {
+        isRecording = true
+        binding.recordFab.setImageResource(android.R.drawable.ic_media_pause)
+        binding.recordFab.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.holo_green_dark)
+
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext())
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        }
+
+        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                if (isRecording) stopRecording()
+            }
+            override fun onError(error: Int) {
+                stopRecording()
+                Toast.makeText(context, "Speech error: $error", Toast.LENGTH_SHORT).show()
+            }
+            override fun onResults(results: Bundle?) {
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    binding.editNoteDesc.setText(matches[0])
+                    refineNoteWithAI() // Auto-refine when speech is finished
+                }
+                stopRecording()
+            }
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    binding.editNoteDesc.setText(matches[0])
+                }
+            }
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
+
+        speechRecognizer?.startListening(intent)
+        Toast.makeText(context, "Listening...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun stopRecording() {
+        isRecording = false
+        binding.recordFab.setImageResource(android.R.drawable.ic_btn_speak_now)
+        binding.recordFab.backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.orangeRed)
+        speechRecognizer?.stopListening()
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+    }
+
+    private fun deleteNote() {
         AlertDialog.Builder(requireActivity()).apply {
             setTitle("Delete Note")
             setMessage("Do you want to delete this note?")
-            setPositiveButton("Delete"){_,_ ->
+            setPositiveButton("Delete") { _, _ ->
                 noteViewModel.deleteNote(currentNote)
                 Toast.makeText(context, "Note deleted successfully", Toast.LENGTH_SHORT).show()
                 view?.findNavController()?.popBackStack(R.id.homeFragment, false)
@@ -174,8 +269,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when(menuItem.itemId){
-
+        return when (menuItem.itemId) {
             R.id.deleteMenu -> {
                 deleteNote()
                 true
@@ -194,7 +288,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             }
             else -> false
         }
-
     }
 
     private fun refineNoteWithAI() {
@@ -206,7 +299,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             lifecycleScope.launch {
                 try {
                     val refined = GeminiHelper.refineNote(noteDesc)
-
                     if (refined.title != null) {
                         binding.editNoteTitle.setText(refined.title)
                     }
@@ -217,6 +309,8 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                         }
                     }
                     Toast.makeText(context, "Note refined! Mood: ${refined.mood}", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error refining note: ${e.message}", Toast.LENGTH_SHORT).show()
                 } finally {
                     isAIProcessing = false
                 }
@@ -233,16 +327,15 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             imm.hideSoftInputFromWindow(view?.windowToken, 0)
 
             val dialog = BottomSheetDialog(requireContext())
-            val view = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
-            dialog.setContentView(view)
+            val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
+            dialog.setContentView(sheetView)
 
-            val summaryText = view.findViewById<TextView>(R.id.summaryText)
-            val progressBar = view.findViewById<View>(R.id.summaryProgressBar)
-            val scrollView = view.findViewById<View>(R.id.summaryScrollView)
-            val copyButton = view.findViewById<Button>(R.id.copyButton)
-            val shareButton = view.findViewById<Button>(R.id.shareButton)
-            val doneGoHomeButton = view.findViewById<Button>(R.id.doneGoHomeButton)
-
+            val summaryText = sheetView.findViewById<TextView>(R.id.summaryText)
+            val progressBar = sheetView.findViewById<View>(R.id.summaryProgressBar)
+            val scrollView = sheetView.findViewById<View>(R.id.summaryScrollView)
+            val copyButton = sheetView.findViewById<Button>(R.id.copyButton)
+            val shareButton = sheetView.findViewById<Button>(R.id.shareButton)
+            val doneGoHomeButton = sheetView.findViewById<Button>(R.id.doneGoHomeButton)
 
             progressBar.visibility = View.VISIBLE
             scrollView.visibility = View.GONE
@@ -265,7 +358,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
                     doneGoHomeButton.setOnClickListener {
                         dialog.dismiss()
-                        view.findNavController().popBackStack(R.id.homeFragment, false)
+                        view?.findNavController()?.popBackStack(R.id.homeFragment, false)
                     }
 
                     copyButton.setOnClickListener {
@@ -308,7 +401,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 currentLine = currentLine.replaceFirst(bulletRegex, "")
             }
 
-
             var lastIdx = 0
             val boldRegex = "\\*{2,3}(.*?)\\*{2,3}".toRegex()
             
@@ -318,7 +410,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 val boldStart = builder.length
                 val boldContent = match.groupValues[1]
                 
-
                 if (boldContent == "OVERVIEW" || boldContent == "KEY HIGHLIGHTS" || boldContent == "INSIGHT") {
                     builder.append(boldContent.uppercase())
                 } else {
@@ -337,8 +428,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     override fun onDestroy() {
         super.onDestroy()
+        speechRecognizer?.destroy()
         editNoteBinding = null
     }
-
-
 }

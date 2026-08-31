@@ -1,17 +1,21 @@
 package com.example.notestaker.fragments
 
+import android.Manifest
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Typeface
 import android.os.Bundle
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.StyleSpan
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -22,11 +26,14 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
@@ -37,11 +44,11 @@ import com.example.notestaker.model.Note
 import com.example.notestaker.utils.GeminiHelper
 import com.example.notestaker.viewmodel.NoteViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
-import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.Calendar
+import java.util.Locale
 
-class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
+class AddNoteFragment : Fragment(R.layout.fragment_add_note), MenuProvider {
     private var addNoteBinding: FragmentAddNoteBinding? = null
     private val binding get() = addNoteBinding!!
 
@@ -52,12 +59,23 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
     private var isSaving = false
     private var isAIProcessing = false
 
+    private var speechRecognizer: SpeechRecognizer? = null
+    private var isRecording = false
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            startRecording()
+        } else {
+            Toast.makeText(context, "Permission denied to record audio", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         addNoteBinding = FragmentAddNoteBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -76,18 +94,93 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
 
         noteViewModel = (activity as MainActivity).noteViewModel
         addNoteView = view
+
+        binding.recordFab.setOnClickListener {
+            if (isRecording) {
+                stopRecording()
+            } else {
+                checkPermissionAndStartRecording()
+            }
+        }
     }
 
-    private fun saveNote(view: View){
+    private fun checkPermissionAndStartRecording() {
+        when {
+            ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.RECORD_AUDIO
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                startRecording()
+            }
+            else -> {
+                requestPermissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+            }
+        }
+    }
+
+    private fun startRecording() {
+        isRecording = true
+        binding.recordFab.setImageResource(android.R.drawable.ic_media_pause)
+        binding.recordFab.backgroundTintList = ContextCompat.getColorStateList(requireContext(), android.R.color.holo_green_dark)
+        
+        speechRecognizer = SpeechRecognizer.createSpeechRecognizer(requireContext())
+        val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+            putExtra(RecognizerIntent.EXTRA_LANGUAGE, Locale.getDefault())
+            putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+        }
+
+        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: Bundle?) {}
+            override fun onBeginningOfSpeech() {}
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                if (isRecording) stopRecording()
+            }
+            override fun onError(error: Int) {
+                stopRecording()
+                Toast.makeText(context, "Speech error: $error", Toast.LENGTH_SHORT).show()
+            }
+            override fun onResults(results: Bundle?) {
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    binding.addNoteDesc.setText(matches[0])
+                    refineNoteWithAI() // Auto-refine when speech is finished
+                }
+                stopRecording()
+            }
+            override fun onPartialResults(partialResults: Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                if (!matches.isNullOrEmpty()) {
+                    binding.addNoteDesc.setText(matches[0])
+                }
+            }
+            override fun onEvent(eventType: Int, params: Bundle?) {}
+        })
+
+        speechRecognizer?.startListening(intent)
+        Toast.makeText(context, "Listening...", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun stopRecording() {
+        isRecording = false
+        binding.recordFab.setImageResource(android.R.drawable.ic_btn_speak_now)
+        binding.recordFab.backgroundTintList = ContextCompat.getColorStateList(requireContext(), R.color.orangeRed)
+        speechRecognizer?.stopListening()
+        speechRecognizer?.destroy()
+        speechRecognizer = null
+    }
+
+    private fun saveNote(view: View) {
         if (isSaving) return
         
         val noteTitle = binding.addNoteTitle.text.toString().trim()
         val noteDesc = binding.addNoteDesc.text.toString().trim()
 
-        if (noteDesc.isNotEmpty()){
+        if (noteDesc.isNotEmpty()) {
             isSaving = true
             if (noteTitle.isEmpty()) {
-
                 Toast.makeText(context, "AI is generating a title and analyzing mood...", Toast.LENGTH_SHORT).show()
                 lifecycleScope.launch {
                     try {
@@ -159,7 +252,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
     }
 
     override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-        return when(menuItem.itemId){
+        return when (menuItem.itemId) {
             R.id.saveMenu -> {
                 saveNote(addNoteView)
                 true
@@ -189,7 +282,6 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
             lifecycleScope.launch {
                 try {
                     val refined = GeminiHelper.refineNote(noteDesc)
-
                     if (refined.title != null) {
                         binding.addNoteTitle.setText(refined.title)
                     }
@@ -200,6 +292,8 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
                         }
                     }
                     Toast.makeText(context, "Note refined! Mood: ${refined.mood}", Toast.LENGTH_SHORT).show()
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Error refining note: ${e.message}", Toast.LENGTH_SHORT).show()
                 } finally {
                     isAIProcessing = false
                 }
@@ -216,16 +310,15 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
             imm.hideSoftInputFromWindow(view?.windowToken, 0)
 
             val dialog = BottomSheetDialog(requireContext())
-            val view = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
-            dialog.setContentView(view)
+            val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
+            dialog.setContentView(sheetView)
 
-            val summaryText = view.findViewById<TextView>(R.id.summaryText)
-            val progressBar = view.findViewById<View>(R.id.summaryProgressBar)
-            val scrollView = view.findViewById<View>(R.id.summaryScrollView)
-            val copyButton = view.findViewById<Button>(R.id.copyButton)
-            val shareButton = view.findViewById<Button>(R.id.shareButton)
-            val doneGoHomeButton = view.findViewById<Button>(R.id.doneGoHomeButton)
-
+            val summaryText = sheetView.findViewById<TextView>(R.id.summaryText)
+            val progressBar = sheetView.findViewById<View>(R.id.summaryProgressBar)
+            val scrollView = sheetView.findViewById<View>(R.id.summaryScrollView)
+            val copyButton = sheetView.findViewById<Button>(R.id.copyButton)
+            val shareButton = sheetView.findViewById<Button>(R.id.shareButton)
+            val doneGoHomeButton = sheetView.findViewById<Button>(R.id.doneGoHomeButton)
 
             progressBar.visibility = View.VISIBLE
             scrollView.visibility = View.GONE
@@ -291,7 +384,6 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
                 currentLine = currentLine.replaceFirst(bulletRegex, "")
             }
 
-
             var lastIdx = 0
             val boldRegex = "\\*{2,3}(.*?)\\*{2,3}".toRegex()
 
@@ -300,7 +392,6 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
 
                 val boldStart = builder.length
                 val boldContent = match.groupValues[1]
-
 
                 if (boldContent == "OVERVIEW" || boldContent == "KEY HIGHLIGHTS" || boldContent == "INSIGHT") {
                     builder.append(boldContent.uppercase())
@@ -320,6 +411,7 @@ class AddNoteFragment : Fragment(R.layout.fragment_add_note) , MenuProvider{
 
     override fun onDestroy() {
         super.onDestroy()
+        speechRecognizer?.destroy()
         addNoteBinding = null
     }
 }

@@ -54,6 +54,20 @@
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:id="@+id/recordFab"
+            android:layout_marginEnd="20dp"
+            android:layout_marginBottom="100dp"
+            android:clickable="true"
+            android:backgroundTint="@color/orangeRed"
+            android:tintMode="@color/white"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:contentDescription="recordFab"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:id="@+id/editNoteFab"
             android:layout_marginEnd="20dp"
             android:clickable="true"
