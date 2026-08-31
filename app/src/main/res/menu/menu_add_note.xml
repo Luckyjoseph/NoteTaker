@@ -3,6 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/summarizeMenu"
+        android:title="AI Summarize"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/aiRefineMenu"
+        android:title="AI Refine"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/lockMenu"
         android:title="Set Lock"
         app:showAsAction="ifRoom"/>

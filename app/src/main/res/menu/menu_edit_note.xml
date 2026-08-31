@@ -11,7 +11,12 @@
     <item
         android:id="@+id/summarizeMenu"
         android:title="AI Summarize"
-        app:showAsAction="ifRoom"/>
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/aiRefineMenu"
+        android:title="AI Refine"
+        app:showAsAction="always"/>
 
     <item
         android:id="@+id/deleteMenu"

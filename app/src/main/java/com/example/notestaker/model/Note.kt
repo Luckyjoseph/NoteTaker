@@ -16,5 +16,6 @@ data class Note(
     val id: Int,
     val noteTitle: String,
     val noteDesc: String,
-    val unlockTimestamp: Long = 0L
+    val unlockTimestamp: Long = 0L,
+    val mood: String = "NEUTRAL"
 ): Parcelable

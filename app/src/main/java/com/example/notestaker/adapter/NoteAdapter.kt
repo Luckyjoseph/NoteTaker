@@ -85,12 +85,11 @@ class NoteAdapter : RecyclerView.Adapter<NoteAdapter.NoteViewHolder>() {
                 holder.itemBinding.noteDesc.text = currentNote.noteDesc
 
 
-                val content = "${currentNote.noteTitle} ${currentNote.noteDesc}".lowercase()
-                val colorRes = when {
-                    content.contains("urgent") || content.contains("must") || content.contains("deadline") -> com.example.notestaker.R.color.mood_urgent
-                    content.contains("happy") || content.contains("great") || content.contains("awesome") || content.contains("love") -> com.example.notestaker.R.color.mood_joy
-                    content.contains("work") || content.contains("meeting") || content.contains("todo") || content.contains("project") -> com.example.notestaker.R.color.mood_work
-                    content.contains("idea") || content.contains("creative") || content.contains("think") -> com.example.notestaker.R.color.mood_idea
+                val colorRes = when (currentNote.mood) {
+                    "URGENT" -> com.example.notestaker.R.color.mood_urgent
+                    "JOY" -> com.example.notestaker.R.color.mood_joy
+                    "WORK" -> com.example.notestaker.R.color.mood_work
+                    "IDEA" -> com.example.notestaker.R.color.mood_idea
                     else -> com.example.notestaker.R.color.mood_neutral
                 }
                 holder.itemBinding.cardView.setCardBackgroundColor(holder.itemView.context.getColor(colorRes))

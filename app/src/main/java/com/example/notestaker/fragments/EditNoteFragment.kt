@@ -24,6 +24,9 @@ import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +53,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private val args: EditNoteFragmentArgs by navArgs()
 
     private var selectedUnlockTimestamp: Long = 0L
+    private var isAIProcessing = false
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -62,6 +66,12 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        ViewCompat.setOnApplyWindowInsetsListener(binding.editNoteRoot) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
+            insets
+        }
 
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
@@ -79,14 +89,33 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             val noteTitle = binding.editNoteTitle.text.toString().trim()
             val noteDesc = binding.editNoteDesc.text.toString().trim()
 
-            if (noteTitle.isNotEmpty()){
-
-                val note = Note (currentNote.id, noteTitle, noteDesc, selectedUnlockTimestamp)
-                noteViewModel.updateNote(note)
-                view.findNavController().popBackStack(R.id.homeFragment, false)
-
+            if (noteDesc.isNotEmpty()){
+                if (noteTitle.isEmpty()) {
+                    Toast.makeText(context, "AI is generating a title and updating mood...", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        try {
+                            val aiTitle = GeminiHelper.generateTitle(noteDesc)
+                            val mood = GeminiHelper.analyzeSentiment(noteDesc)
+                            val note = Note(currentNote.id, aiTitle ?: "Untitled AI Note", noteDesc, selectedUnlockTimestamp, mood)
+                            noteViewModel.updateNote(note)
+                            view.findNavController().popBackStack(R.id.homeFragment, false)
+                        } catch (e: Exception) {
+                            val note = Note(currentNote.id, "Untitled AI Note", noteDesc, selectedUnlockTimestamp, "NEUTRAL")
+                            noteViewModel.updateNote(note)
+                            view.findNavController().popBackStack(R.id.homeFragment, false)
+                        }
+                    }
+                } else {
+                    Toast.makeText(context, "AI is updating mood...", Toast.LENGTH_SHORT).show()
+                    lifecycleScope.launch {
+                        val mood = GeminiHelper.analyzeSentiment(noteDesc)
+                        val note = Note (currentNote.id, noteTitle, noteDesc, selectedUnlockTimestamp, mood)
+                        noteViewModel.updateNote(note)
+                        view.findNavController().popBackStack(R.id.homeFragment, false)
+                    }
+                }
             } else {
-                Toast.makeText(context, "Please enter note title" , Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Please enter note description" , Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -159,9 +188,42 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 summarizeNote()
                 true
             }
+            R.id.aiRefineMenu -> {
+                refineNoteWithAI()
+                true
+            }
             else -> false
         }
 
+    }
+
+    private fun refineNoteWithAI() {
+        if (isAIProcessing) return
+        val noteDesc = binding.editNoteDesc.text.toString().trim()
+        if (noteDesc.isNotEmpty()) {
+            isAIProcessing = true
+            Toast.makeText(context, "AI is refining your note...", Toast.LENGTH_SHORT).show()
+            lifecycleScope.launch {
+                try {
+                    val refined = GeminiHelper.refineNote(noteDesc)
+
+                    if (refined.title != null) {
+                        binding.editNoteTitle.setText(refined.title)
+                    }
+                    if (refined.tags != null) {
+                        val currentDesc = binding.editNoteDesc.text.toString()
+                        if (!currentDesc.contains(refined.tags)) {
+                            binding.editNoteDesc.setText("$currentDesc\n\n${refined.tags}")
+                        }
+                    }
+                    Toast.makeText(context, "Note refined! Mood: ${refined.mood}", Toast.LENGTH_SHORT).show()
+                } finally {
+                    isAIProcessing = false
+                }
+            }
+        } else {
+            Toast.makeText(context, "Note is empty", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun summarizeNote() {
@@ -179,12 +241,14 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             val scrollView = view.findViewById<View>(R.id.summaryScrollView)
             val copyButton = view.findViewById<Button>(R.id.copyButton)
             val shareButton = view.findViewById<Button>(R.id.shareButton)
+            val doneGoHomeButton = view.findViewById<Button>(R.id.doneGoHomeButton)
 
 
             progressBar.visibility = View.VISIBLE
             scrollView.visibility = View.GONE
             copyButton.isEnabled = false
             shareButton.isEnabled = false
+            doneGoHomeButton.isEnabled = false
 
             dialog.show()
 
@@ -197,6 +261,12 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                     summaryText.text = formatSummaryText(summary)
                     copyButton.isEnabled = true
                     shareButton.isEnabled = true
+                    doneGoHomeButton.isEnabled = true
+
+                    doneGoHomeButton.setOnClickListener {
+                        dialog.dismiss()
+                        view.findNavController().popBackStack(R.id.homeFragment, false)
+                    }
 
                     copyButton.setOnClickListener {
                         val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
