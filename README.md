@@ -1,46 +1,51 @@
 # NotesTaker
 
-NotesTaker is a simple, modern, and efficient Android application designed for quick note-taking. It allows users to capture their thoughts, ideas, and reminders seamlessly with a clean user interface.
+NotesTaker is a simple, modern, and efficient Android application designed for quick note-taking. It leverages cutting-edge AI and immersive design to help users capture, organize, and summarize their thoughts seamlessly.
 
-## Features
+## ✨ Key Features
 
-- **Create Notes**: Easily add new notes with a title and detailed description.
-- **Manage Notes**: Edit or delete existing notes to keep your list organized.
-- **Search Functionality**: Quickly find specific notes using the built-in search feature on the home screen.
-- **Adaptive Layout**: View your notes in a beautiful staggered grid layout that adapts to different screen sizes.
-- **Mood-Reactive Styling**: Automatically changes note colors based on keywords like "Urgent", "Happy", or "Work" for visual organization.
-- **"Time Capsule" Notes**: Lock your notes until a specific future date and time—perfect for long-term goals or reminders.
-- **"Ghost" Privacy Mode**: Instantly obscure all note content with a one-tap privacy toggle, making it safe to use in public spaces.
-- **Smart Action Ribbons**: Detects phone numbers, emails, and web links in your notes and adds one-tap action buttons directly to the card.
-- **Local Storage**: Your notes are stored locally on your device using Room Database, ensuring they are available even offline.
-- **Modern Architecture**: Built following the MVVM (Model-View-ViewModel) architecture for scalability and maintainability.
+- **🤖 AI-Powered Intelligence**: 
+    - **Executive Summaries**: Instantly generate professional summaries of long notes with an "Overview", "Key Highlights", and "Insights" structure.
+    - **Smart Refinement**: One-tap AI refinement that automatically generates titles, suggests relevant hashtags, and analyzes note sentiment.
+    - **Automatic Sentiment Analysis**: Notes are automatically categorized by mood (Happy, Sad, Angry, Neutral) with reactive color-coding.
+- **📸 Visual Note Scanning (OCR)**: Use your camera to scan text directly from documents or images. AI extracts the text and structures it into a new note for you.
+- **🎙️ Voice-to-Note**: Dictate your thoughts on the go. High-accuracy speech-to-text transcription lets you create notes without typing.
+- **🔒 Advanced Privacy & Security**:
+    - **"Ghost" Mode**: Instantly obscure all note content with a one-tap privacy toggle for safe use in public.
+    - **"Time Capsule" Notes**: Lock specific notes until a future date and time—perfect for goal-setting or scheduled reminders.
+- **⚡ Smart Action Ribbons**: Automatically detects phone numbers, emails, and web links, providing one-tap action buttons (Call, Email, Open Link) directly on the note card.
+- **📱 Immersive Experience**:
+    - **Edge-to-Edge Design**: Fully supports modern Android edge-to-edge layouts for a beautiful, immersive full-screen experience.
+    - **Adaptive Layout**: A staggered grid layout that scales beautifully across all device sizes.
+- **💾 Local-First & Reliable**: Your data is stored securely on your device using **Room Database**, ensuring offline access and fast performance.
 
-## Tech Stack & Libraries
+## 🛠 Tech Stack
 
-- **Kotlin**: The primary programming language used.
-- **Room Database**: For persistent local data storage.
-- **Navigation Component**: To handle fragment transitions and backstack management.
-- **ViewModel & LiveData**: For managing UI-related data in a lifecycle-conscious way.
-- **Coroutines**: For performing background operations smoothly.
-- **Data Binding**: To bind UI components in layouts to data sources in the app.
-- **Material Design**: For a clean and intuitive user interface.
+- **Kotlin**: Primary language for modern Android development.
+- **Google Gemini AI (3.6 Flash)**: Powers the summarization, refinement, and OCR features.
+- **Android Architecture Components**: MVVM architecture using ViewModel, LiveData, and Navigation Component.
+- **Room Persistence**: Robust local SQLite database.
+- **Speech Recognition API**: For seamless voice-to-text integration.
+- **Material 3**: Clean, intuitive UI based on the latest design standards.
+- **Coroutines & Flow**: For efficient asynchronous operations.
 
-## Screenshots
+## 📸 Screenshots
 ![Home Screen](screenshots/Screenshot_20260823_164224.png)
-![Feature update](screenshots/img_1.png)
+![AI Refinement](screenshots/img_1.png)
 
-
-
-
-## Installation
+## 🚀 Installation
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/yourusername/NotesTaker.git
    ```
-2. Open the project in **Android Studio**.
-3. Build and run the app on an emulator or a physical device.
+2. Add your **Gemini API Key** to `local.properties`:
+   ```properties
+   GEMINI_API_KEY=your_api_key_here
+   ```
+3. Open the project in **Android Studio**.
+4. Build and run on an emulator or physical device.
 
-## Contributing
+## 🤝 Contributing
 
-Contributions are welcome! If you'd like to improve the app, feel free to fork the repository and submit a pull request.
+Contributions are welcome! If you'd like to improve the app or add new AI features, feel free to fork the repository and submit a pull request.
