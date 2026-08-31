@@ -4,22 +4,22 @@ NotesTaker is a simple, modern, and efficient Android application designed for q
 
 ## ✨ Key Features
 
-- **🤖 AI-Powered Intelligence**: 
+- **AI-Powered Intelligence**: 
     - **Executive Summaries**: Instantly generate professional summaries of long notes with an "Overview", "Key Highlights", and "Insights" structure.
     - **Smart Refinement**: One-tap AI refinement that automatically generates titles, suggests relevant hashtags, and analyzes note sentiment.
     - **Automatic Sentiment Analysis**: Notes are automatically categorized by mood (Happy, Sad, Angry, Neutral) with reactive color-coding.
-- **📸 Visual Note Scanning (OCR)**: Use your camera to scan text directly from documents or images. AI extracts the text and structures it into a new note for you.
-- **🎙️ Voice-to-Note**: Dictate your thoughts on the go. High-accuracy speech-to-text transcription lets you create notes without typing.
-- **🔒 Advanced Privacy & Security**:
+- **Visual Note Scanning (OCR)**: Use your camera to scan text directly from documents or images. AI extracts the text and structures it into a new note for you.
+- **Voice-to-Note**: Dictate your thoughts on the go. High-accuracy speech-to-text transcription lets you create notes without typing.
+- **Advanced Privacy & Security**:
     - **"Ghost" Mode**: Instantly obscure all note content with a one-tap privacy toggle for safe use in public.
     - **"Time Capsule" Notes**: Lock specific notes until a future date and time—perfect for goal-setting or scheduled reminders.
-- **⚡ Smart Action Ribbons**: Automatically detects phone numbers, emails, and web links, providing one-tap action buttons (Call, Email, Open Link) directly on the note card.
-- **📱 Immersive Experience**:
+- **Smart Action Ribbons**: Automatically detects phone numbers, emails, and web links, providing one-tap action buttons (Call, Email, Open Link) directly on the note card.
+- **Immersive Experience**:
     - **Edge-to-Edge Design**: Fully supports modern Android edge-to-edge layouts for a beautiful, immersive full-screen experience.
     - **Adaptive Layout**: A staggered grid layout that scales beautifully across all device sizes.
-- **💾 Local-First & Reliable**: Your data is stored securely on your device using **Room Database**, ensuring offline access and fast performance.
+- ** Local-First & Reliable**: Your data is stored securely on your device using **Room Database**, ensuring offline access and fast performance.
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - **Kotlin**: Primary language for modern Android development.
 - **Google Gemini AI (3.6 Flash)**: Powers the summarization, refinement, and OCR features.
@@ -29,7 +29,7 @@ NotesTaker is a simple, modern, and efficient Android application designed for q
 - **Material 3**: Clean, intuitive UI based on the latest design standards.
 - **Coroutines & Flow**: For efficient asynchronous operations.
 
-## 📸 Screenshots
+## Screenshots
 ![Home Screen](screenshots/Screenshot_20260823_164224.png)
 ![AI Refinement](screenshots/img_1.png)
 
