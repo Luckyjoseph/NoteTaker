@@ -46,6 +46,7 @@ import com.example.notestaker.model.Note
 import com.example.notestaker.utils.GeminiHelper
 import com.example.notestaker.viewmodel.NoteViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.Locale
@@ -62,6 +63,7 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     private var selectedUnlockTimestamp: Long = 0L
     private var isAIProcessing = false
+    private var previousDescription: String? = null
 
     private var speechRecognizer: SpeechRecognizer? = null
     private var isRecording = false
@@ -330,31 +332,48 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             val sheetView = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
             dialog.setContentView(sheetView)
 
+            // Force the bottom sheet to be fully expanded
+            dialog.behavior.state = com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_EXPANDED
+
             val summaryText = sheetView.findViewById<TextView>(R.id.summaryText)
             val progressBar = sheetView.findViewById<View>(R.id.summaryProgressBar)
-            val scrollView = sheetView.findViewById<View>(R.id.summaryScrollView)
             val copyButton = sheetView.findViewById<Button>(R.id.copyButton)
             val shareButton = sheetView.findViewById<Button>(R.id.shareButton)
             val doneGoHomeButton = sheetView.findViewById<Button>(R.id.doneGoHomeButton)
+            val replaceButton = sheetView.findViewById<Button>(R.id.replaceButton)
 
             progressBar.visibility = View.VISIBLE
-            scrollView.visibility = View.GONE
+            summaryText.visibility = View.GONE
             copyButton.isEnabled = false
             shareButton.isEnabled = false
             doneGoHomeButton.isEnabled = false
+            replaceButton.isEnabled = false
 
             dialog.show()
 
             lifecycleScope.launch {
                 val summary = GeminiHelper.summarize(noteDesc)
                 progressBar.visibility = View.GONE
-                scrollView.visibility = View.VISIBLE
+                summaryText.visibility = View.VISIBLE
 
                 if (summary != null) {
                     summaryText.text = formatSummaryText(summary)
                     copyButton.isEnabled = true
                     shareButton.isEnabled = true
                     doneGoHomeButton.isEnabled = true
+                    replaceButton.isEnabled = true
+
+                    replaceButton.setOnClickListener {
+                        previousDescription = binding.editNoteDesc.text.toString()
+                        binding.editNoteDesc.setText(summary)
+                        dialog.dismiss()
+                        
+                        Snackbar.make(binding.root, "Note replaced with summary", Snackbar.LENGTH_LONG)
+                            .setAction("Undo") {
+                                binding.editNoteDesc.setText(previousDescription)
+                                Toast.makeText(context, "Reverted to previous version", Toast.LENGTH_SHORT).show()
+                            }.show()
+                    }
 
                     doneGoHomeButton.setOnClickListener {
                         dialog.dismiss()

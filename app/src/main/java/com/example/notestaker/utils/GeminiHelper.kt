@@ -4,7 +4,6 @@ import android.util.Log
 import com.example.notestaker.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
 import com.google.ai.client.generativeai.type.content
-import java.io.File
 
 object GeminiHelper {
     private const val TAG = "GeminiHelper"
@@ -140,42 +139,6 @@ object GeminiHelper {
             if (e.message?.contains("quota", ignoreCase = true) == true) {
                 return RefinedNote("Quota Exceeded", "Please wait", "NEUTRAL")
             }
-            RefinedNote(null, null, "NEUTRAL")
-        }
-    }
-
-    suspend fun processAudioNote(audioFile: File): RefinedNote {
-        Log.d(TAG, "Processing audio note...")
-        if (BuildConfig.GEMINI_API_KEY.isBlank()) return RefinedNote(null, null, "NEUTRAL")
-
-        return try {
-            val response = model.generateContent(
-                content {
-                    blob("audio/mp4", audioFile.readBytes())
-                    text("""
-                        Transcribe this audio and format it into a structured note. 
-                        Provide three specific things:
-                        1. A concise title (max 5 words).
-                        2. The full transcription as the description.
-                        3. A single-word mood (HAPPY, SAD, ANGRY, or NEUTRAL).
-                        
-                        Format your response EXACTLY like this:
-                        TITLE: [title here]
-                        DESCRIPTION: [transcription here]
-                        MOOD: [mood here]
-                    """.trimIndent())
-                }
-            )
-
-            val responseText = response.text ?: ""
-            val title = "TITLE: (.*)".toRegex().find(responseText)?.groupValues?.get(1)?.trim()
-            val desc = "DESCRIPTION: (.*)".toRegex(RegexOption.DOT_MATCHES_ALL).find(responseText)?.groupValues?.get(1)?.trim()
-            val mood = "MOOD: (.*)".toRegex().find(responseText)?.groupValues?.get(1)?.trim()?.uppercase() ?: "NEUTRAL"
-
-            Log.d(TAG, "Audio Note success: Title=$title")
-            RefinedNote(title, desc, if (mood in listOf("HAPPY", "SAD", "ANGRY", "NEUTRAL")) mood else "NEUTRAL")
-        } catch (e: Exception) {
-            Log.e(TAG, "Audio Note error: ${e.message}")
             RefinedNote(null, null, "NEUTRAL")
         }
     }
