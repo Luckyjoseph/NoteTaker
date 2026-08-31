@@ -1,5 +1,6 @@
 package com.example.notestaker.utils
 
+import android.graphics.Bitmap
 import android.util.Log
 import com.example.notestaker.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
@@ -140,6 +141,24 @@ object GeminiHelper {
                 return RefinedNote("Quota Exceeded", "Please wait", "NEUTRAL")
             }
             RefinedNote(null, null, "NEUTRAL")
+        }
+    }
+
+    suspend fun scanTextFromImage(bitmap: Bitmap): String? {
+        Log.d(TAG, "Scanning text from image...")
+        if (BuildConfig.GEMINI_API_KEY.isBlank()) return "Error: API Key missing"
+
+        return try {
+            val response = model.generateContent(
+                content {
+                    image(bitmap)
+                    text("Extract all visible text from this image and return it as a clean, structured note. Preserve the original formatting as much as possible. Return ONLY the extracted text.")
+                }
+            )
+            response.text
+        } catch (e: Exception) {
+            Log.e(TAG, "Scan error: ${e.message}")
+            null
         }
     }
 }

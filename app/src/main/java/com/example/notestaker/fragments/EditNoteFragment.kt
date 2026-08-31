@@ -8,7 +8,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Typeface
+import android.net.Uri
 import android.os.Bundle
 import android.speech.RecognitionListener
 import android.speech.RecognizerIntent
@@ -29,6 +32,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.core.view.ViewCompat
@@ -48,6 +52,7 @@ import com.example.notestaker.viewmodel.NoteViewModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
+import java.io.File
 import java.util.Calendar
 import java.util.Locale
 
@@ -68,6 +73,9 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
     private var speechRecognizer: SpeechRecognizer? = null
     private var isRecording = false
 
+    private var photoFile: File? = null
+    private var photoUri: Uri? = null
+
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -75,6 +83,24 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
             startRecording()
         } else {
             Toast.makeText(context, "Permission denied to record audio", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            processScannedImage()
+        }
+    }
+
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            openCamera()
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -88,12 +114,6 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
-        ViewCompat.setOnApplyWindowInsetsListener(binding.editNoteRoot) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.updatePadding(top = systemBars.top, bottom = systemBars.bottom)
-            insets
-        }
 
         val menuHost: MenuHost = requireActivity()
         menuHost.addMenuProvider(this, viewLifecycleOwner, Lifecycle.State.RESUMED)
@@ -145,6 +165,48 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 stopRecording()
             } else {
                 checkPermissionAndStartRecording()
+            }
+        }
+
+        binding.scanFab.setOnClickListener {
+            checkCameraPermissionAndOpen()
+        }
+    }
+
+    private fun checkCameraPermissionAndOpen() {
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            openCamera()
+        } else {
+            requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    private fun openCamera() {
+        val storageDir = File(requireContext().cacheDir, "images")
+        if (!storageDir.exists()) storageDir.mkdirs()
+        photoFile = File(storageDir, "scan_${System.currentTimeMillis()}.jpg")
+        photoUri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", photoFile!!)
+        takePictureLauncher.launch(photoUri)
+    }
+
+    private fun processScannedImage() {
+        val file = photoFile ?: return
+        if (!file.exists()) return
+
+        lifecycleScope.launch {
+            try {
+                Toast.makeText(context, "AI is scanning text from image...", Toast.LENGTH_LONG).show()
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                val text = GeminiHelper.scanTextFromImage(bitmap)
+                if (!text.isNullOrEmpty()) {
+                    binding.editNoteDesc.setText(text)
+                    Toast.makeText(context, "Text scanned successfully!", Toast.LENGTH_SHORT).show()
+                    refineNoteWithAI() // Auto-refine to get a title and mood
+                } else {
+                    Toast.makeText(context, "No text found in image", Toast.LENGTH_SHORT).show()
+                }
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error scanning image: ${e.message}", Toast.LENGTH_SHORT).show()
             }
         }
     }
