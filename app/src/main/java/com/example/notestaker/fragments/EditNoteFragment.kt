@@ -2,7 +2,16 @@ package com.example.notestaker.fragments
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.StyleSpan
+import android.view.inputmethod.InputMethodManager
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.Menu
@@ -10,18 +19,24 @@ import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.notestaker.MainActivity
 import com.example.notestaker.R
 import com.example.notestaker.databinding.FragmentEditNoteBinding
 import com.example.notestaker.model.Note
+import com.example.notestaker.utils.GeminiHelper
 import com.example.notestaker.viewmodel.NoteViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.launch
 import java.util.Calendar
 
 class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
@@ -140,9 +155,92 @@ class EditNoteFragment : Fragment(R.layout.fragment_edit_note), MenuProvider {
                 showDatePicker()
                 true
             }
+            R.id.summarizeMenu -> {
+                summarizeNote()
+                true
+            }
             else -> false
         }
 
+    }
+
+    private fun summarizeNote() {
+        val noteDesc = binding.editNoteDesc.text.toString().trim()
+        if (noteDesc.isNotEmpty()) {
+            val imm = requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.hideSoftInputFromWindow(view?.windowToken, 0)
+
+            val dialog = BottomSheetDialog(requireContext())
+            val view = layoutInflater.inflate(R.layout.bottom_sheet_summary, null)
+            dialog.setContentView(view)
+
+            val summaryText = view.findViewById<TextView>(R.id.summaryText)
+            val progressBar = view.findViewById<View>(R.id.summaryProgressBar)
+            val scrollView = view.findViewById<View>(R.id.summaryScrollView)
+            val copyButton = view.findViewById<Button>(R.id.copyButton)
+            val shareButton = view.findViewById<Button>(R.id.shareButton)
+
+            // Initial state
+            progressBar.visibility = View.VISIBLE
+            scrollView.visibility = View.GONE
+            copyButton.isEnabled = false
+            shareButton.isEnabled = false
+
+            dialog.show()
+
+            lifecycleScope.launch {
+                val summary = GeminiHelper.summarize(noteDesc)
+                progressBar.visibility = View.GONE
+                scrollView.visibility = View.VISIBLE
+
+                if (summary != null) {
+                    summaryText.text = formatSummaryText(summary)
+                    copyButton.isEnabled = true
+                    shareButton.isEnabled = true
+
+                    copyButton.setOnClickListener {
+                        val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("AI Summary", summary)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "Summary copied to clipboard", Toast.LENGTH_SHORT).show()
+                    }
+
+                    shareButton.setOnClickListener {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(Intent.EXTRA_TEXT, summary)
+                        }
+                        startActivity(Intent.createChooser(shareIntent, "Share Summary"))
+                    }
+                } else {
+                    summaryText.text = "Failed to generate summary. Please try again."
+                }
+            }
+        } else {
+            Toast.makeText(context, "Note is empty", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun formatSummaryText(text: String): CharSequence {
+        val builder = SpannableStringBuilder()
+        val lines = text.split("\n")
+
+        for (line in lines) {
+            val trimmedLine = line.trim()
+            if (trimmedLine.startsWith("**") && trimmedLine.endsWith("**")) {
+                // Header format: **Header**
+                val header = trimmedLine.substring(2, trimmedLine.length - 2)
+                val start = builder.length
+                builder.append(header.uppercase()).append("\n")
+                builder.setSpan(StyleSpan(Typeface.BOLD), start, builder.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            } else if (trimmedLine.startsWith("-")) {
+                // Bullet format: - Point
+                builder.append("  • ").append(trimmedLine.substring(1).trim()).append("\n")
+            } else {
+                builder.append(line).append("\n")
+            }
+        }
+        return builder
     }
 
     override fun onDestroy() {

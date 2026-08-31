@@ -9,6 +9,11 @@
         app:showAsAction="ifRoom"/>
 
     <item
+        android:id="@+id/summarizeMenu"
+        android:title="AI Summarize"
+        app:showAsAction="ifRoom"/>
+
+    <item
         android:id="@+id/deleteMenu"
         android:icon="@drawable/outline_delete_24"
         android:title=""
