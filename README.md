@@ -2,7 +2,7 @@
 
 NotesTaker is a simple, modern, and efficient Android application designed for quick note-taking. It leverages cutting-edge AI and immersive design to help users capture, organize, and summarize their thoughts seamlessly.
 
-## ✨ Key Features
+## Key Features
 
 - **AI-Powered Intelligence**: 
     - **Executive Summaries**: Instantly generate professional summaries of long notes with an "Overview", "Key Highlights", and "Insights" structure.
